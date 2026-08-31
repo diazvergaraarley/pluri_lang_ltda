@@ -18,6 +18,18 @@ TELEGRAM_API_URL = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}"
 
 
 # ---------------------------------------------------------
+# Metrics
+# ---------------------------------------------------------
+
+total_queries = 0
+escalated_queries = 0
+
+total_input_tokens = 0
+total_output_tokens = 0
+total_tokens = 0
+
+
+# ---------------------------------------------------------
 # Telegram helpers
 # ---------------------------------------------------------
 
@@ -165,7 +177,18 @@ MENU_QUESTIONS = {
 async def handle_menu_option(chat_id: int, option: str):
     """Process a menu option through the same RAG pipeline."""
 
+    global total_queries
+    global escalated_queries
+    global total_input_tokens
+    global total_output_tokens
+    global total_tokens
+
+    # -----------------------------------------------------
+    # Human advisor
+    # -----------------------------------------------------
+
     if option == "human":
+
         await send_message(
             chat_id,
             "🔄 Te estoy transfiriendo con un asesor humano..."
@@ -185,14 +208,40 @@ async def handle_menu_option(chat_id: int, option: str):
         await send_main_menu(chat_id)
         return
 
+    # -----------------------------------------------------
+    # Invalid menu option
+    # -----------------------------------------------------
+
     if option not in MENU_QUESTIONS:
         return
 
+    # -----------------------------------------------------
+    # RAG query
+    # -----------------------------------------------------
+
     question = MENU_QUESTIONS[option]
 
-    answer = process_query(question)
+    total_queries += 1
 
-    await send_message(chat_id, answer)
+    answer, requiere_escalamiento, usage = process_query(question)
+
+    if requiere_escalamiento:
+        escalated_queries += 1
+
+    # Token usage
+    total_input_tokens += usage.get("input_tokens", 0)
+    total_output_tokens += usage.get("output_tokens", 0)
+    total_tokens += usage.get("total_tokens", 0)
+
+    await send_message(
+        chat_id,
+        answer
+    )
+
+    # If RAG requires escalation, perform the human transfer flow.
+    if requiere_escalamiento:
+        await handle_menu_option(chat_id, "human")
+        return
 
     await send_message(
         chat_id,
@@ -213,9 +262,35 @@ def home():
     }
 
 
+@app.get("/metrics")
+def metrics():
+
+    escalation_rate = (
+        (escalated_queries / total_queries) * 100
+        if total_queries > 0
+        else 0
+    )
+
+    return {
+        "total_queries": total_queries,
+        "escalated_queries": escalated_queries,
+        "escalation_rate": round(escalation_rate, 2),
+        "total_input_tokens": total_input_tokens,
+        "total_output_tokens": total_output_tokens,
+        "total_tokens": total_tokens,
+        "status": "online"
+    }
+
+
 @app.post("/webhook")
 async def telegram_webhook(request: Request):
     """Receive Telegram webhook updates."""
+
+    global total_queries
+    global escalated_queries
+    global total_input_tokens
+    global total_output_tokens
+    global total_tokens
 
     data = await request.json()
 
@@ -233,13 +308,18 @@ async def telegram_webhook(request: Request):
         chat_id = message["chat"]["id"]
         user_text = message.get("text", "").strip()
 
-        # /start must be handled separately.
-        # It should NEVER be sent to the RAG pipeline.
+        # -------------------------------------------------
+        # /start
+        # -------------------------------------------------
+
         if user_text.lower() == "/start":
             await send_start_message(chat_id)
             return {"ok": True}
 
-        # "opciones" allows users to manually open the menu.
+        # -------------------------------------------------
+        # Main menu commands
+        # -------------------------------------------------
+
         if user_text.lower() in [
             "opciones",
             "opcion",
@@ -254,18 +334,36 @@ async def telegram_webhook(request: Request):
         if not user_text:
             return {"ok": True}
 
+        # -------------------------------------------------
         # Normal user question -> RAG pipeline
-        respuesta_ia = process_query(user_text)
+        # -------------------------------------------------
 
-        if "No encuentro esa información" in respuesta_ia:
-            await send_message(
-                chat_id,
-                "⚠️ No encuentro esa información en nuestros documentos oficiales. "
-                "Necesito que un asesor humano te brinde información exacta."
-            )
-        
+        total_queries += 1
+
+        respuesta_ia, requiere_escalamiento, usage = process_query(
+            user_text
+        )
+
+        if requiere_escalamiento:
+            escalated_queries += 1
+
+        # Token usage
+        total_input_tokens += usage.get("input_tokens", 0)
+        total_output_tokens += usage.get("output_tokens", 0)
+        total_tokens += usage.get("total_tokens", 0)
+
+        # First send the RAG response.
+        await send_message(
+            chat_id,
+            respuesta_ia
+        )
+
+        # If the RAG response requires human assistance,
+        # continue with the transfer simulation.
+        if requiere_escalamiento:
             await handle_menu_option(chat_id, "human")
-            return
+
+        return {"ok": True}
 
     # -----------------------------------------------------
     # Telegram inline keyboard callback
@@ -283,7 +381,9 @@ async def telegram_webhook(request: Request):
         async with httpx.AsyncClient() as client:
             await client.post(
                 f"{TELEGRAM_API_URL}/answerCallbackQuery",
-                json={"callback_query_id": callback_id}
+                json={
+                    "callback_query_id": callback_id
+                }
             )
 
         if callback_data == "menu":

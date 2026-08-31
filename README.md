@@ -200,9 +200,70 @@ The required variables are documented in `.env.example`.
 
 ## Local Setup
 
+### 0. Ngrok Setup (Required for Local Telegram Testing)
+
+If you want to connect your local FastAPI server to Telegram, you need to expose your local server through a public HTTPS URL using Ngrok.
+
+#### 0.1 Create an Ngrok account
+
+First, create a free account at:
+
+[Ngrok Sign Up](https://ngrok.com/?utm_source=chatgpt.com)
+
+After registering, open the **Your Authtoken** section from the left-hand menu in the Ngrok dashboard and copy your authentication token. Keep it somewhere safe; you will need it to configure the Ngrok agent.
+
+#### 0.2 Install Ngrok
+
+**Windows:**
+
+You can install Ngrok using Windows Package Manager:
+
+```bash
+winget install ngrok -s msstore
+```
+
+**Linux (Debian/Ubuntu):**
+
+```bash
+curl -sSL https://ngrok-agent.s3.amazonaws.com/ngrok.asc \
+  | sudo tee /etc/apt/trusted.gpg.d/ngrok.asc >/dev/null \
+  && echo "deb https://ngrok-agent.s3.amazonaws.com bookworm main" \
+  | sudo tee /etc/apt/sources.list.d/ngrok.list \
+  && sudo apt update \
+  && sudo apt install ngrok
+```
+
+If you are using another operating system or encounter any installation or configuration issue, refer directly to the official Ngrok setup instructions:
+
+[Ngrok Setup Guide](https://dashboard.ngrok.com/get-started/gateway?utm_source=chatgpt.com)
+
+#### 0.3 Configure your Authtoken
+
+After installing Ngrok, add your authentication token to the default Ngrok configuration:
+
+```bash
+ngrok config add-authtoken $YOUR_AUTHTOKEN
+```
+
+Replace `$YOUR_AUTHTOKEN` with the token obtained from the Ngrok dashboard.
+
+Ngrok is now configured and ready to expose the local FastAPI server.
+
+> **Note:** The actual Ngrok tunnel is started later, after the FastAPI backend is running. Continue with the application setup below and return to the Ngrok command in the Telegram webhook setup section.
+
+
 ### 1. Clone the repository
 
-Clone the project repository and enter the project directory.
+Clone the project repository and enter the project directory. 
+
+```bash
+https://github.com/diazvergaraarley/pluri_lang_ltda
+```
+to execute in localserver, change to branch using
+
+```bash
+git checkout localserver
+```
 
 ### 2. Create the virtual environment
 

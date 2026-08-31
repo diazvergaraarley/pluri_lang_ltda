@@ -202,8 +202,11 @@ The required variables are documented in `.env.example`.
 
 ### 1. Clone the repository
 
-Clone the project repository and enter the project directory.
+Clone the project repository and enter the project directory. 
 
+```bash
+https://github.com/diazvergaraarley/pluri_lang_ltda
+```
 to execute in localserver, change to branch using
 
 ```bash

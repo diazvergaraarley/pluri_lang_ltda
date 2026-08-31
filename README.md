@@ -204,6 +204,12 @@ The required variables are documented in `.env.example`.
 
 Clone the project repository and enter the project directory.
 
+to execute in localserver, change to branch using
+
+```bash
+git checkout localserver
+```
+
 ### 2. Create the virtual environment
 
 ```bash

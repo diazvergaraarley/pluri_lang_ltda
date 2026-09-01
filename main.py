@@ -295,7 +295,7 @@ def home():
             <div class="hero-content">
                 <h1>Aprende Idiomas Con Docentes Expertos</h1>
                 <p>Abre las puertas a un mundo de oportunidades con nuestros programas de idiomas. Aprende con metodología innovadora, desde Inglés hasta Italiano. Inscríbete hoy y domina un nuevo idioma.</p>
-                <a href="https://web.telegram.org/k/#@multilang_barranquilla_bot" class="btn-main" target="_blank">¡Hablar con el Asistente!</a>
+                <a href="t.me/multilang_barranquilla_bot" class="btn-main" target="_blank">¡Hablar con el Asistente!</a>
             </div>
         </section>
 
@@ -314,7 +314,7 @@ def home():
             </div>
         </section>
 
-        <a href="https://web.telegram.org/k/#@multilang_barranquilla_bot" class="floating-bot" target="_blank" title="Chatea con nuestro bot">
+        <a href="t.me/multilang_barranquilla_bot" class="floating-bot" target="_blank" title="Chatea con nuestro bot">
             <i class="fab fa-telegram-plane"></i>
         </a>
 

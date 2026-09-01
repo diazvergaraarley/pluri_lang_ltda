@@ -1,0 +1,72 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "plurilang-escalation",
+        "options": {}
+      },
+      "id": "f0aa00f3-a878-46c8-8d4f-f815eb7bf482",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "17d58043-9ea7-469d-92da-7e628c6106ac"
+    },
+    {
+      "parameters": {
+        "fromEmail": "diazvergara.arley@gmail.com",
+        "toEmail": "diazvergara.arley@gmail.com",
+        "subject": "⚠️ Nueva consulta requiere atención humana - PluriLang",
+        "html": "=Un usuario de PluriLang ha realizado una consulta que no pudo ser\nrespondida utilizando la información oficial disponible.\n\nPregunta:\n{{$json.body.user_question}}\n\nChat ID de Telegram:\n{{$json.body.chat_id}}\n\nMensaje generado por el asistente:\n{{$json.body.message}}\n\nFecha:\n{{$json.body.timestamp}}",
+        "options": {}
+      },
+      "id": "ccbab715-7041-4d17-a6f0-2b9977b57dec",
+      "name": "Send an Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        176,
+        0
+      ],
+      "webhookId": "2ba54b93-f9e4-4633-b94a-3835a3665cef",
+      "credentials": {
+        "smtp": {
+          "id": "GXrMSEOqaSw1sq3A",
+          "name": "SMTP account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Send an Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "6452554c-c3de-479f-a5d4-786b48b3e791",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "15047620dbf306f80231286fad526414253114988bb6188cfd263267f950b085"
+  },
+  "nodeGroups": [],
+  "id": "sqQlAM48nb83JcJH",
+  "tags": []
+}

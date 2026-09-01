@@ -208,7 +208,7 @@ If you want to connect your local FastAPI server to Telegram, you need to expose
 
 First, create a free account at:
 
-[Ngrok Sign Up](https://ngrok.com/?utm_source=chatgpt.com)
+https://ngrok.com/
 
 After registering, open the **Your Authtoken** section from the left-hand menu in the Ngrok dashboard and copy your authentication token. Keep it somewhere safe; you will need it to configure the Ngrok agent.
 
@@ -367,13 +367,13 @@ ngrok http 8000
 ngrok will provide a public HTTPS URL similar to:
 
 ```text
-https://example-name.ngrok-free.app
+ https://falcon-pardon-gladly.ngrok-free.dev
 ```
 
 Register the Telegram webhook using:
 
 ```text
-https://api.telegram.org/bot<YOUR_TELEGRAM_TOKEN>/setWebhook?url=<YOUR_NGROK_HTTPS_URL>/webhook
+https://api.telegram.org/bot8686928834:AAF-H1H5rYgcJVSe2scuenDXj_SSD0IQLj8/setWebhook?url=https://falcon-pardon-gladly.ngrok-free.dev/webhook
 ```
 
 Replace:

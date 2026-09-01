@@ -1,12 +1,12 @@
 import os
 import asyncio
+from datetime import datetime
 
 from fastapi import FastAPI, Request
 from dotenv import load_dotenv
 import httpx
 
 from agent import process_query
-
 
 # Load environment variables
 load_dotenv()
@@ -15,7 +15,7 @@ app = FastAPI(title="PluriLang Barranquilla Assistant")
 
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 TELEGRAM_API_URL = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}"
-
+N8N_WEBHOOK_URL = os.getenv("N8N_WEBHOOK_URL")
 
 # ---------------------------------------------------------
 # Metrics
@@ -28,19 +28,39 @@ total_input_tokens = 0
 total_output_tokens = 0
 total_tokens = 0
 
+# ---------------------------------------------------------
+# Telegram & n8n helpers
+# ---------------------------------------------------------
 
-# ---------------------------------------------------------
-# Telegram helpers
-# ---------------------------------------------------------
+async def notify_n8n(chat_id: int, user_question: str):
+    """Send escalation payload to n8n webhook."""
+    if not N8N_WEBHOOK_URL:
+        print("⚠️ Advertencia: N8N_WEBHOOK_URL no está configurado en el .env")
+        return
+
+    payload = {
+        "user_question": user_question,
+        "chat_id": str(chat_id),
+        "message": "Escalamiento requerido por el asistente virtual.",
+        "timestamp": datetime.utcnow().isoformat() + "Z"
+    }
+
+    print(f"🚀 Disparando webhook hacia n8n: {N8N_WEBHOOK_URL}")
+
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.post(N8N_WEBHOOK_URL, json=payload, timeout=5.0)
+            print(f"📡 Status n8n: {response.status_code}")
+            print(f"📡 Respuesta n8n: {response.text}")
+        except Exception as e:
+            print(f"❌ Error de conexión: {e}")
 
 async def send_message(chat_id: int, text: str, reply_markup=None):
     """Send a message to a Telegram chat."""
-
     payload = {
         "chat_id": chat_id,
         "text": text
     }
-
     if reply_markup:
         payload["reply_markup"] = reply_markup
 
@@ -49,13 +69,10 @@ async def send_message(chat_id: int, text: str, reply_markup=None):
             f"{TELEGRAM_API_URL}/sendMessage",
             json=payload
         )
-
         response.raise_for_status()
-
 
 async def send_start_message(chat_id: int):
     """Send the welcome message and main menu."""
-
     welcome_message = (
         "👋 ¡Hola! Bienvenido a PluriLang Barranquilla Ltda.\n\n"
         "Soy el asistente virtual de PluriLang. 🤖\n\n"
@@ -72,83 +89,41 @@ async def send_start_message(chat_id: int):
     keyboard = {
         "inline_keyboard": [
             [
-                {
-                    "text": "💰 Precios y descuentos",
-                    "callback_data": "prices"
-                },
-                {
-                    "text": "📚 Idiomas y niveles",
-                    "callback_data": "languages"
-                }
+                {"text": "💰 Precios y descuentos", "callback_data": "prices"},
+                {"text": "📚 Idiomas y niveles", "callback_data": "languages"}
             ],
             [
-                {
-                    "text": "🕐 Horarios y modalidades",
-                    "callback_data": "schedules"
-                },
-                {
-                    "text": "📝 Inscripciones",
-                    "callback_data": "enrollment"
-                }
+                {"text": "🕐 Horarios y modalidades", "callback_data": "schedules"},
+                {"text": "📝 Inscripciones", "callback_data": "enrollment"}
             ],
             [
-                {
-                    "text": "🎓 Certificaciones",
-                    "callback_data": "certifications"
-                }
+                {"text": "🎓 Certificaciones", "callback_data": "certifications"}
             ],
             [
-                {
-                    "text": "👨‍💼 Hablar con un asesor",
-                    "callback_data": "human"
-                }
+                {"text": "👨‍💼 Hablar con un asesor", "callback_data": "human"}
             ]
         ]
     }
 
-    await send_message(
-        chat_id,
-        welcome_message,
-        keyboard
-    )
-
+    await send_message(chat_id, welcome_message, keyboard)
 
 async def send_main_menu(chat_id: int):
     """Send the main menu."""
-
     keyboard = {
         "inline_keyboard": [
             [
-                {
-                    "text": "💰 Precios y descuentos",
-                    "callback_data": "prices"
-                },
-                {
-                    "text": "📚 Idiomas y niveles",
-                    "callback_data": "languages"
-                }
+                {"text": "💰 Precios y descuentos", "callback_data": "prices"},
+                {"text": "📚 Idiomas y niveles", "callback_data": "languages"}
             ],
             [
-                {
-                    "text": "🕐 Horarios y modalidades",
-                    "callback_data": "schedules"
-                },
-                {
-                    "text": "📝 Inscripciones",
-                    "callback_data": "enrollment"
-                }
+                {"text": "🕐 Horarios y modalidades", "callback_data": "schedules"},
+                {"text": "📝 Inscripciones", "callback_data": "enrollment"}
             ],
             [
-                {
-                    "text": "🎓 Certificaciones",
-                    "callback_data": "certifications"
-                }
+                {"text": "🎓 Certificaciones", "callback_data": "certifications"}
             ],
             [
-                {
-                    "text": "👨‍💼 Hablar con un asesor",
-                    "callback_data": "human"
-                }
+                {"text": "👨‍💼 Hablar con un asesor", "callback_data": "human"}
             ]
         ]
     }
@@ -159,7 +134,6 @@ async def send_main_menu(chat_id: int):
         "También puedes escribir tu pregunta directamente.",
         keyboard
     )
-
 
 # ---------------------------------------------------------
 # Menu option handlers
@@ -173,10 +147,8 @@ MENU_QUESTIONS = {
     "certifications": "¿Qué certificaciones y certificados ofrece PluriLang?"
 }
 
-
-async def handle_menu_option(chat_id: int, option: str):
+async def handle_menu_option(chat_id: int, option: str, user_question: str = "Solicitud directa de asesor vía menú"):
     """Process a menu option through the same RAG pipeline."""
-
     global total_queries
     global escalated_queries
     global total_input_tokens
@@ -186,13 +158,14 @@ async def handle_menu_option(chat_id: int, option: str):
     # -----------------------------------------------------
     # Human advisor
     # -----------------------------------------------------
-
     if option == "human":
-
         await send_message(
             chat_id,
             "🔄 Te estoy transfiriendo con un asesor humano..."
         )
+        
+        # Disparamos el webhook hacia n8n sin pausar el bot de Telegram
+        asyncio.create_task(notify_n8n(chat_id, user_question))
 
         await asyncio.sleep(1.5)
 
@@ -211,16 +184,13 @@ async def handle_menu_option(chat_id: int, option: str):
     # -----------------------------------------------------
     # Invalid menu option
     # -----------------------------------------------------
-
     if option not in MENU_QUESTIONS:
         return
 
     # -----------------------------------------------------
     # RAG query
     # -----------------------------------------------------
-
     question = MENU_QUESTIONS[option]
-
     total_queries += 1
 
     answer, requiere_escalamiento, usage = process_query(question)
@@ -228,28 +198,21 @@ async def handle_menu_option(chat_id: int, option: str):
     if requiere_escalamiento:
         escalated_queries += 1
 
-    # Token usage
     total_input_tokens += usage.get("input_tokens", 0)
     total_output_tokens += usage.get("output_tokens", 0)
     total_tokens += usage.get("total_tokens", 0)
 
-    await send_message(
-        chat_id,
-        answer
-    )
+    await send_message(chat_id, answer)
 
-    # If RAG requires escalation, perform the human transfer flow.
     if requiere_escalamiento:
-        await handle_menu_option(chat_id, "human")
+        await handle_menu_option(chat_id, "human", user_question=question)
         return
 
     await send_message(
         chat_id,
         "¿Te gustaría hacer otra pregunta o consultar otro tema?"
     )
-
     await send_main_menu(chat_id)
-
 
 # ---------------------------------------------------------
 # FastAPI endpoints
@@ -257,20 +220,15 @@ async def handle_menu_option(chat_id: int, option: str):
 
 @app.get("/")
 def home():
-    return {
-        "status": "PluriLang Barranquilla Assistant is online 🚀"
-    }
-
+    return {"status": "PluriLang Barranquilla Assistant is online 🚀"}
 
 @app.get("/metrics")
 def metrics():
-
     escalation_rate = (
         (escalated_queries / total_queries) * 100
         if total_queries > 0
         else 0
     )
-
     return {
         "total_queries": total_queries,
         "escalated_queries": escalated_queries,
@@ -281,11 +239,9 @@ def metrics():
         "status": "online"
     }
 
-
 @app.post("/webhook")
 async def telegram_webhook(request: Request):
     """Receive Telegram webhook updates."""
-
     global total_queries
     global escalated_queries
     global total_input_tokens
@@ -297,103 +253,66 @@ async def telegram_webhook(request: Request):
     # -----------------------------------------------------
     # Standard Telegram message
     # -----------------------------------------------------
-
     if "message" in data:
-
         message = data["message"]
-
         if "chat" not in message:
             return {"ok": True}
 
         chat_id = message["chat"]["id"]
         user_text = message.get("text", "").strip()
 
-        # -------------------------------------------------
-        # /start
-        # -------------------------------------------------
-
         if user_text.lower() == "/start":
             await send_start_message(chat_id)
             return {"ok": True}
 
-        # -------------------------------------------------
-        # Main menu commands
-        # -------------------------------------------------
-
-        if user_text.lower() in [
-            "opciones",
-            "opcion",
-            "menú",
-            "menu",
-            "ayuda"
-        ]:
+        if user_text.lower() in ["opciones", "opcion", "menú", "menu", "ayuda"]:
             await send_main_menu(chat_id)
             return {"ok": True}
 
-        # Ignore messages without text.
         if not user_text:
             return {"ok": True}
 
         # -------------------------------------------------
         # Normal user question -> RAG pipeline
         # -------------------------------------------------
-
         total_queries += 1
 
-        respuesta_ia, requiere_escalamiento, usage = process_query(
-            user_text
-        )
+        respuesta_ia, requiere_escalamiento, usage = process_query(user_text)
 
         if requiere_escalamiento:
             escalated_queries += 1
 
-        # Token usage
         total_input_tokens += usage.get("input_tokens", 0)
         total_output_tokens += usage.get("output_tokens", 0)
         total_tokens += usage.get("total_tokens", 0)
 
-        # First send the RAG response.
-        await send_message(
-            chat_id,
-            respuesta_ia
-        )
+        await send_message(chat_id, respuesta_ia)
 
-        # If the RAG response requires human assistance,
-        # continue with the transfer simulation.
         if requiere_escalamiento:
-            await handle_menu_option(chat_id, "human")
+            # Pasamos el texto real del usuario para que n8n sepa qué preguntó
+            await handle_menu_option(chat_id, "human", user_question=user_text)
 
         return {"ok": True}
 
     # -----------------------------------------------------
     # Telegram inline keyboard callback
     # -----------------------------------------------------
-
     if "callback_query" in data:
-
         callback_query = data["callback_query"]
-
         callback_id = callback_query["id"]
         callback_data = callback_query.get("data")
         chat_id = callback_query["message"]["chat"]["id"]
 
-        # Acknowledge the callback to Telegram
         async with httpx.AsyncClient() as client:
             await client.post(
                 f"{TELEGRAM_API_URL}/answerCallbackQuery",
-                json={
-                    "callback_query_id": callback_id
-                }
+                json={"callback_query_id": callback_id}
             )
 
         if callback_data == "menu":
             await send_main_menu(chat_id)
-
         else:
-            await handle_menu_option(
-                chat_id,
-                callback_data
-            )
+            await handle_menu_option(chat_id, callback_data)
 
         return {"ok": True}
 

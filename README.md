@@ -373,7 +373,7 @@ ngrok will provide a public HTTPS URL similar to:
 Register the Telegram webhook using:
 
 ```text
-https://api.telegram.org/bot8686928834:AAF-H1H5rYgcJVSe2scuenDXj_SSD0IQLj8/setWebhook?url=https://falcon-pardon-gladly.ngrok-free.dev/webhook
+https://api.telegram.org/bot<YOUR_TELEGRAM_TOKEN>/setWebhook?url=<YOUR_NGROK_HTTPS_URL>
 ```
 
 Replace:

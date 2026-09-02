@@ -95,31 +95,79 @@ async def send_message(chat_id: int, text: str, reply_markup=None):
         await client.post(f"{TELEGRAM_API_URL}/sendMessage", json=payload)
 
 async def send_start_message(chat_id: int):
-    welcome_message = "👋 ¡Hola! Bienvenido a PluriLang Barranquilla Ltda.\n\nSoy el asistente virtual. 🤖\n\n¿Cómo puedo ayudarte?"
+    """Send the welcome message and main menu."""
+    welcome_message = (
+        "👋 ¡Hola! Bienvenido a PluriLang Barranquilla Ltda.\n\n"
+        "Soy el asistente virtual de PluriLang. 🤖\n\n"
+        "Puedo ayudarte con información sobre nuestros programas de idiomas, "
+        "precios, horarios, modalidades de estudio, inscripciones y "
+        "certificaciones, basándome únicamente en la información oficial "
+        "de la academia.\n\n"
+        "Puedes hacerme una pregunta específica en cualquier momento o "
+        "seleccionar una de las opciones para consultar nuestros temas "
+        "más frecuentes.\n\n"
+        "¿Cómo puedo ayudarte?"
+    )
+
     keyboard = {
         "inline_keyboard": [
-            [{"text": "💰 Precios", "callback_data": "prices"}, {"text": "📚 Idiomas", "callback_data": "languages"}],
-            [{"text": "🕐 Horarios", "callback_data": "schedules"}, {"text": "👨‍💼 Asesor", "callback_data": "human"}]
+            [
+                {"text": "💰 Precios y descuentos", "callback_data": "prices"},
+                {"text": "📚 Idiomas y niveles", "callback_data": "languages"}
+            ],
+            [
+                {"text": "🕐 Horarios y modalidades", "callback_data": "schedules"},
+                {"text": "📝 Inscripciones", "callback_data": "enrollment"}
+            ],
+            [
+                {"text": "🎓 Certificaciones", "callback_data": "certifications"}
+            ],
+            [
+                {"text": "👨‍💼 Hablar con un asesor", "callback_data": "human"}
+            ]
         ]
     }
+
     await send_message(chat_id, welcome_message, keyboard)
 
 async def send_main_menu(chat_id: int):
+    """Send the main menu."""
     keyboard = {
         "inline_keyboard": [
-            [{"text": "💰 Precios", "callback_data": "prices"}, {"text": "📚 Idiomas", "callback_data": "languages"}],
-            [{"text": "🕐 Horarios", "callback_data": "schedules"}, {"text": "👨‍💼 Asesor", "callback_data": "human"}]
+            [
+                {"text": "💰 Precios y descuentos", "callback_data": "prices"},
+                {"text": "📚 Idiomas y niveles", "callback_data": "languages"}
+            ],
+            [
+                {"text": "🕐 Horarios y modalidades", "callback_data": "schedules"},
+                {"text": "📝 Inscripciones", "callback_data": "enrollment"}
+            ],
+            [
+                {"text": "🎓 Certificaciones", "callback_data": "certifications"}
+            ],
+            [
+                {"text": "👨‍💼 Hablar con un asesor", "callback_data": "human"}
+            ]
         ]
     }
-    await send_message(chat_id, "¿Qué te gustaría consultar?", keyboard)
+
+    await send_message(
+        chat_id,
+        "¿Qué te gustaría consultar sobre PluriLang?\n\n"
+        "También puedes escribir tu pregunta directamente.",
+        keyboard
+    )
 
 # ---------------------------------------------------------
 # Menu option handlers
 # ---------------------------------------------------------
+
 MENU_QUESTIONS = {
-    "prices": "¿Cuáles son los precios y descuentos?",
+    "prices": "¿Cuáles son los precios y descuentos de los programas de idiomas?",
     "languages": "¿Qué idiomas y niveles ofrece PluriLang?",
-    "schedules": "¿Qué modalidades de estudio y horarios están disponibles?"
+    "schedules": "¿Qué modalidades de estudio y horarios están disponibles?",
+    "enrollment": "¿Cómo puedo inscribirme en PluriLang?",
+    "certifications": "¿Qué certificaciones y certificados ofrece PluriLang?"
 }
 
 async def handle_menu_option(chat_id: int, option: str, user_question: str = "Solicitud vía menú"):

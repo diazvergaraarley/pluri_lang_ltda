@@ -166,7 +166,7 @@ MENU_QUESTIONS = {
     "prices": "¿Cuáles son los precios y descuentos de los programas de idiomas?",
     "languages": "¿Qué idiomas y niveles ofrece PluriLang?",
     "schedules": "¿Qué modalidades de estudio y horarios están disponibles?",
-    "enrollment": "¿Cómo puedo inscribirme en PluriLang?",
+    "enrollment": "¿Cómo es el proceso de inscripciones?",
     "certifications": "¿Qué certificaciones y certificados ofrece PluriLang?"
 }
 

@@ -175,7 +175,7 @@ async def handle_menu_option(chat_id: int, option: str, user_question: str = "So
         await send_message(chat_id, "🔄 Transfiriendo con un asesor...")
         asyncio.create_task(notify_n8n(chat_id, user_question))
         await asyncio.sleep(1.5)
-        await send_message(chat_id, "Lo sentimos, no hay asesores disponibles. Te contactaremos pronto.")
+        await send_message(chat_id, "Lo sentimos, pero en este momento no tenemos un asesor humano disponible para atenderte.\n Un miembro de nuestro equipo se pondrá en contacto contigo por este mismo medio tan pronto como sea posible.\n Mientras tanto, ¿te gustaría hacer otra pregunta?")
         await send_main_menu(chat_id)
         return
 

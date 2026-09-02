@@ -156,22 +156,81 @@ def home():
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>PluriLang | Academia</title>
+        <title>PluriLang Barranquilla | Academia de Idiomas</title>
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
         <style>
-            body { font-family: sans-serif; background: #f4f7f6; text-align: center; padding: 50px; }
-            .btn { background: #c90042; color: white; padding: 15px 30px; text-decoration: none; border-radius: 30px; font-weight: bold; }
+            :root { --primary: #c90042; --text-light: #ffffff; --bg-light: #f4f7f6; }
+            * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+            body { background-color: var(--bg-light); color: #333; }
+            
+            .navbar { position: absolute; top: 0; width: 100%; padding: 20px 50px; display: flex; justify-content: space-between; align-items: center; background: linear-gradient(rgba(0,0,0,0.7), transparent); z-index: 10; }
+            .navbar .logo { color: var(--text-light); font-size: 24px; font-weight: bold; }
+            .nav-links a { color: var(--text-light); text-decoration: none; margin: 0 15px; font-size: 14px; }
+            .nav-btn { background-color: var(--primary); color: var(--text-light); padding: 8px 20px; border-radius: 20px; text-decoration: none; font-weight: bold; cursor: pointer; border: none; }
+            
+            .hero { height: 100vh; background: linear-gradient(to right, rgba(15, 23, 42, 0.9) 30%, rgba(15, 23, 42, 0.4) 100%), url('https://images.unsplash.com/photo-1523240795612-9a054b0db644?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80') center/cover; display: flex; align-items: center; padding: 0 10%; }
+            .hero-content { max-width: 600px; color: var(--text-light); }
+            .hero-content h1 { font-size: 3.5rem; margin-bottom: 20px; line-height: 1.1; }
+            .hero-content p { font-size: 1.1rem; margin-bottom: 30px; opacity: 0.9; }
+            .btn-main { display: inline-block; background-color: var(--primary); color: var(--text-light); padding: 15px 35px; text-decoration: none; border-radius: 30px; font-weight: bold; font-size: 1.1rem; cursor: pointer; border: none; }
+            
+            .info-section { padding: 60px 10%; display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; }
+            .info-card { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+            .info-card h3 { color: var(--primary); margin-bottom: 15px; }
+            
+            .floating-bot { position: fixed; bottom: 30px; left: 30px; background-color: #0088cc; color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 30px; text-decoration: none; box-shadow: 0 4px 10px rgba(0,0,0,0.3); z-index: 100; transition: transform 0.3s; cursor: pointer; border: none; }
+            .floating-bot:hover { transform: scale(1.1); }
         </style>
     </head>
     <body>
-        <h1>PluriLang Barranquilla</h1>
-        <p>Aprende idiomas con expertos.</p>
-        <button onclick="openBot()" class="btn">¡Hablar con el Asistente!</button>
+
+        <nav class="navbar">
+            <div class="logo">PluriLang <span style="font-weight: 300; font-size: 18px;">Barranquilla</span></div>
+            <div class="nav-links">
+                <a href="#">Inicio</a>
+                <a href="#">Acerca De</a>
+                <a href="#">Programas</a>
+                <button onclick="openBot()" class="nav-btn">Contacto</button>
+            </div>
+        </nav>
+
+        <section class="hero">
+            <div class="hero-content">
+                <h1>Aprende Idiomas Con Docentes Expertos</h1>
+                <p>Abre las puertas a un mundo de oportunidades con nuestros programas de idiomas. Aprende con metodología innovadora, desde Inglés hasta Italiano. Inscríbete hoy y domina un nuevo idioma.</p>
+                <button onclick="openBot()" class="btn-main">¡Hablar con el Asistente!</button>
+            </div>
+        </section>
+
+        <section class="info-section">
+            <div class="info-card">
+                <h3><i class="fas fa-globe"></i> 5 Idiomas Disponibles</h3>
+                <p>Ofrecemos programas estructurados en Inglés, Francés, Portugués, Alemán e Italiano desde el nivel A1.</p>
+            </div>
+            <div class="info-card">
+                <h3><i class="fas fa-laptop-house"></i> 3 Modalidades</h3>
+                <p>Estudia a tu ritmo eligiendo entre modalidad Presencial, Virtual en vivo o Híbrida.</p>
+            </div>
+            <div class="info-card">
+                <h3><i class="fas fa-tag"></i> Descuentos Especiales</h3>
+                <p>Mensualidades desde $280.000 COP. Aprovecha hasta un 15% de descuento inscribiéndote en grupo.</p>
+            </div>
+        </section>
+
+        <button onclick="openBot()" class="floating-bot" title="Chatea con nuestro bot">
+            <i class="fab fa-telegram-plane"></i>
+        </button>
+
         <script>
             function openBot() {
                 const botUsername = "multilang_barranquilla_bot";
                 const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-                if (isMobile) { window.location.href = `https://t.me/${botUsername}`; } 
-                else { window.open(`https://web.telegram.org/k/#@${botUsername}`, '_blank'); }
+                
+                if (isMobile) {
+                    window.location.href = `https://t.me/${botUsername}`;
+                } else {
+                    window.open(`https://web.telegram.org/k/#@${botUsername}`, '_blank');
+                }
             }
         </script>
     </body>
